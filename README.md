@@ -1,5 +1,5 @@
 # SNARL Diversity
-##Shiny app exploring biodiversity at the Sierra Nevada Aquatic Research Laboratory (SNARL)
+## Shiny app exploring biodiversity at the Sierra Nevada Aquatic Research Laboratory (SNARL)
 
 Authors:  Olivia Ross<sup>1</sup> and [Charles Thrift<sup>2</sup>](https://orcid.org/0000-0002-4257-6951)
 
