@@ -6,6 +6,8 @@ library(shiny)
 library(here)
 library(dplyr)
 library(maps)
+library(tidyverse)
+library(janitor)
 
 # Data -----------------------------------------------------------------------
 #### Species Distribution Data - only Plants in Mono County
