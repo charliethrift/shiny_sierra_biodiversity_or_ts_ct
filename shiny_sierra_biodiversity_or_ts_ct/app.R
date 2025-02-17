@@ -8,6 +8,21 @@ library(dplyr)
 library(maps)
 library(tidyverse)
 library(janitor)
+library(bslib)
+
+my_theme <- bs_theme(bootswatch = 'sketchy') %>% 
+  bs_theme_update(bg='#dcdec8',
+                  fg='#323133',
+                  primary="#1e17a6",
+                  secondary="#645df5",
+                  success = "#26de57",
+                  info="#1b8c76",
+                  warning = "#f0ec26",
+                  danger = "#f04b26",
+                  base_font = font_google("Rasa"),
+                  code_font = font_google("Atkinson Hyperlegible Mono"),
+                  heading_font = font_google("Rubik Dirt"),
+                  font_scale = 1.25)
 
 # Data -----------------------------------------------------------------------
 #### Species Distribution Data - only Plants in Mono County
@@ -45,21 +60,81 @@ wildfire_plot_year <- function(input_year){
 
 
 # UI --------------------------------------------------------------------------
-ui <- fluidPage(
-  sidebarLayout(
-    sidebarPanel("Choose Inputs",
-                 sliderInput("yr", "Year of Recorded Observation:",
-                             min = 1980, max = 2025, value = 2000)),
+ui <- navbarPage(
+  theme = my_theme,
+  title = "Biodiversity of the Sierra Nevada Aquatic Research Laboratory",
+  tabPanel("Main Page",
+        fluidPage(
+          titlePanel("A rich history of occurrence data"),
+          sidebarLayout(
+            sidebarPanel("Choose Inputs",
+                 sliderInput(
+                 inputId = "yr", 
+                 label = "Year of Recorded Observation:",
+                 min = 1980, 
+                 max = 2025, 
+                 value = 2000),
+                 selectInput(
+                   inputId = "polygon_color",
+                   label = "select polygon color",
+                   choices = c("Red" = "red",
+                               "Orange" = "orange",
+                               "Yellow" = "yellow")
+                 )
+                 ),
     mainPanel("Map of Species Distribution",
               plotOutput("species_dist_plot"))
+    ))),
+  tabPanel(
+    "Fire in the Sierras",
+    fluidPage(
+      titlePanel("Summary of Inputs"),
+      verbatimTextOutput("output_summary_page")
+    )
+  ),
+  tabPanel(
+    "Species Distribution Models",
+    fluidPage(
+      titlePanel("Species Distribution Models"),
+      p("UI Placeholder."),
+      p("Species distribution models of select species from GBIF occurences, indicating where the research station property falls within their range.")
+    )
+  ),
+  tabPanel(
+    "About Page",
+    fluidPage(
+      titlePanel("About This App"),
+      p("This app visualizes the biodiversity of the Sierra Nevada Aquatic Research Laboratory in Mammoth Lakes, California."),
+      p("User inputs allow you to navigate the past, present, and future of biodiversity in this University of California site."),
+      p("MORE INFO ABOUT DATA AND CITATIONS TO BE INCLUDED HERE")
+    )
   )
 )
 
+
 # Server ----------------------------------------------------------------------
-server <- function(input, output) {
+server <- function(input, output, session) {
   output$species_dist_plot <- renderPlot({
     species_dist_plot_year(input$yr)
   })
+  output$output_summary <- renderPrint({
+    summary(list(
+      Name = input$text_input,
+      Numeric = input$num_input,
+      Slider = input$slider_input,
+      Checkbox = input$checkbox,
+      Radio = input$radio_input
+    ))
+  })
+  output$output_summary_page <- renderPrint({
+    summary(list(
+      Name = input$text_input,
+      Numeric = input$num_input,
+      Slider = input$slider_input,
+      Checkbox = input$checkbox,
+      Radio = input$radio_input
+    ))
+})
 }
 
 # Complete app with UI and server components
