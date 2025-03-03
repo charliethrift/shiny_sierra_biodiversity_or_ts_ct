@@ -31,8 +31,7 @@ species_cols <- c('year','month', 'day', 'phylum','class','order','family',
 species_df_all_years <- read_csv(here("shiny_sierra_biodiversity_or_ts_ct",
                             "data", "occurrences.csv")) %>% clean_names() %>%
   select(species_cols) %>% drop_na()
-# establish relative root path
-rpath <- "shiny_sierra_biodiversity_or_ts_ct"
+
 
 # Calflora Data----------------------------------------------------------------#
 snarl_calflora <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data/snarl_calflora", "shz1198.shp"))
@@ -45,7 +44,7 @@ snv <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data", "snv", "Sierra_Ne
 
 # Climate Data-----------------------------------------------------------------#
 ## Setting directory for prism data
-prism_set_dl_dir(here(rpath,"data", "climate"))
+prism_set_dl_dir(here("shiny_sierra_biodiversity_or_ts_ct/data", "climate"))
 
 # # Downloading climate normals
 get_prism_normals("tmax", "4km", annual = TRUE, keepZip = FALSE)
@@ -60,7 +59,7 @@ get_prism_annual("ppt", years = 2020:2023, keepZip = FALSE)
 snarl <- c(-118.83317, 37.61404)
 
 # SNARL reserve boundary
-# snarl_poly <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data/SNARL", "SNARL_boundary.shp"))
+snarl_poly <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data/SNARL", "SNARL_boundary.shp"))
 
 # Wrappers ------------------------------------------------------------------
 ## to avoid cluttering UI and Server  
@@ -161,8 +160,8 @@ fire_map_year <- tm_shape(snv) +
    tm_dots(col = "orange") +
 
    tm_add_legend(type="fill", label = "SNARL", col = "orange") +
-   tm_add_legend(type="fill", label = "Sierra Nevada", col = "black")+
-   tmap_animation(fire_map, time = "Year_numeric", width = 800, height = 600)
+   tm_add_legend(type="fill", label = "Sierra Nevada", col = "black")
+   # tmap_animation(time = "Year_numeric", width = 800, height = 600)
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 # Creating the user interface
