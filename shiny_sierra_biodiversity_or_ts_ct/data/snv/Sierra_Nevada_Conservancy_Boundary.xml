@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?><metadata>
+    <idinfo>
+        <descript>
+            <abstract>Sierra Nevada Conservancy (SNC) boundary. The boundary was
+mapped to correspond with statute AB 2600 (2004) and as re-defined in SB 208
+(2022). Work on the boundary was completed by CalFire, GreenInfo Network, and
+the California Department of Fish and Game. Meets and bounds description of the
+area as defined in statute: PRC Section 33302 (f) defines the Sierra Nevada
+Region as the area lying within the Counties of Alpine, Amador, Butte,
+Calaveras, El Dorado, Fresno, Inyo, Kern, Lassen, Madera, Mariposa, Modoc,
+Mono, Nevada, Placer, Plumas, Shasta, Sierra, Siskiyou, Tehama, Trinity,
+Tulare, Tuolumne, and Yuba, described as the area bounded as follows: On the
+east by the eastern boundary of the State of California; the crest of the
+White/Inyo ranges; and State Routes 395 and 14 south of Olancha; on the south
+by State Route 58, Tehachapi Creek, and Caliente Creek; on the west by the line
+of 1,250 feet above sea level from Caliente Creek to the Kern/Tulare County
+line; the lower level of the western slope’s blue oak woodland, from the
+Kern/Tulare County line to the Sacramento River near the mouth of Seven-Mile
+Creek north of Red Bluff; the Sacramento River from Seven-Mile Creek north to
+Cow Creek below Redding; Cow Creek, Little Cow Creek, Dry Creek, and up to the
+southern boundary of the Pit River watershed where Bear Creek Mountain Road and
+Dry Creek Road intersect; the southern boundary of the Pit River watershed; the
+western boundary of the upper Trinity watershed in the County of Trinity; on the
+north by the boundary of the upper Trinity watershed in the County of Trinity
+and the upper Sacramento, McCloud, and Pit River watersheds in the County of
+Siskiyou; and within the County of Modoc, the easterly boundary of the Klamath
+River watershed; and on the north in the County of Modoc by the northern
+boundary of the State of California; excluding both of the following: (1) The
+Lake Tahoe Region, as described in Section 6605.5 of the Government Code, where
+it is defined as &amp;quot;region&amp;quot; (2) The San Joaquin River Parkway, as
+described in Section 32510.
+
+According to GreenInfo Network and the California Department
+of Fish and Game, the blue oak woodland used to define a portion of the Sierra
+Nevada Conservancy's western boundary was delineated using referenced
+vegetation and imagery data.</abstract>
+            <purpose>A feature layer of the SNC boundary.</purpose>
+        </descript>
+        <keywords>
+            <theme>
+                <themekt>None</themekt>
+                <themekey>Sierra Nevada Conservancy</themekey>
+                <themekey>Sierra Nevada Conservancy (SNC)</themekey>
+                <themekey>Watershed Improvement Program (WIP)</themekey>
+                <themekey>Boundaries</themekey>
+                <themekey>CAOpenData</themekey>
+                <themekey>SNC</themekey>
+                <themekey>California Natural Resources Agency</themekey>
+                <themekey>American River Watershed</themekey>
+                <themekey>Carson-Walker-Mono-Adobe Watershed</themekey>
+                <themekey>Cosumnes-Mokelumne-Calaveras Rivers Watershed Assessment</themekey>
+                <themekey>Feather Watershed</themekey>
+                <themekey>Kern River Watershed</themekey>
+                <themekey>Kings-Kaweah-Tule Watershed</themekey>
+                <themekey>Lower Owens Watershed</themekey>
+                <themekey>Merced Watershed</themekey>
+                <themekey>Pit Watershed</themekey>
+                <themekey>Stanislaus River Watershed</themekey>
+                <themekey>Tehachapi Watershed</themekey>
+                <themekey>Upper Sacramento Watershed</themekey>
+                <themekey>Upper San Joaquin River Watershed</themekey>
+                <themekey>Yuba-Bear Watershed</themekey>
+            </theme>
+        </keywords>
+        <accconst>None</accconst>
+        <useconst>This layer was prepared by or for the Sierra Nevada Conservancy (SNC).The layer has been posted on this site solely for the purpose of general public information; the viewer should not rely upon the contents of this layer for any specific purpose without making independent investigation. The SNC assumes no responsibility for any risk, loss, or liability that may result from the viewer's use of the layer.</useconst>
+        <datacred/>
+    </idinfo>
+    <metainfo>
+        <metstdn>FGDC Content Standard for Digital Geospatial Metadata</metstdn>
+        <metstdv>FGDC-STD-001-1998</metstdv>
+        <mettc>local time</mettc>
+    </metainfo>
+</metadata>
