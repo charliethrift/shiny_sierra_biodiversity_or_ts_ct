@@ -9,7 +9,7 @@ librarian::shelf("prism", "here", "ggplot2", "tmap", "sf", "lubridate", "tidyver
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 # Setting directory for prism data
-prism_set_dl_dir(here("data", "climate"))
+prism_set_dl_dir(here("shiny_sierra_biodiversity_or_ts_ct/data", "climate"))
 
 # Downloading climate normals
 get_prism_normals("tmax", "4km", annual = TRUE, keepZip = FALSE)
@@ -23,7 +23,7 @@ get_prism_annual("ppt", years = 2000:2023, keepZip = FALSE)
 snarl <- c(-118.83317, 37.61404)
 
 # SNARL reserve boundary
-snarl_poly <- st_read(here("data/SNARL", "SNARL_boundary.shp"))
+snarl_poly <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data/SNARL", "SNARL_boundary.shp"))
 
 # Plot 1: Maximum Annual Temperature at SNARL----------------------------------#
 
@@ -69,10 +69,10 @@ ppt_snarl +
 # Interactive wildfire map
 
 # Reading in fire perimeter data
-fire <- st_read(here("data", "fire perimeters", "mtbs_perims_DD.shp"))
+fire <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data", "fire perimeters", "mtbs_perims_DD.shp"))
 
 # Reading in Sierra Nevada Border
-snv <- st_read(here("data", "snv", "Sierra_Nevada_Conservancy_Boundary.shp"))
+snv <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data", "snv", "Sierra_Nevada_Conservancy_Boundary.shp"))
 
 # Creating a year column for fire ignition date and selecting wildfires in 2000-2023 
 
@@ -109,11 +109,11 @@ fire_time <- ts(fire_snv$Year_numeric, start = 2000, frequency = 1)
 tmap_mode("view")
 install.packages("gifski")
 
-tm_shape(snv) +
+fire_map <- tm_shape(snv) +
   tm_borders("black", lwd=1.0) +
   
   tm_shape(fire_snv) +
-  tmap_options(check.and.fix = TRUE)+
+  # tmap_options(check.and.fix = TRUE)+
   tm_fill(col = "Year", palette = "PiYG", title="Fire Year") +
   #tm_borders("black") +
   
@@ -138,7 +138,7 @@ tm_shape(snarl_poly) +
 # Map of SNARL & Plants--------------------------------------------------------#
 
 # Reading in cal flora data
-snarl_calflora <- st_read(here("data/snarl_calflora", "shz1198.shp"))
+snarl_calflora <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data/snarl_calflora", "shz1198.shp"))
 
 # Getting just the year 
 snarl_calflora <- snarl_calflora |>
