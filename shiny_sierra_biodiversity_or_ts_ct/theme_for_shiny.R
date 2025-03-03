@@ -2,7 +2,7 @@
 # for shiny app
 # 16 february 2025
 my_theme <- bs_theme(bootswatch = 'sketchy') %>% 
-  bs_theme_update(bg='#dcdec8',
+  bs_theme_update(bg='azure2',
                   fg='#323133',
                   primary="#1e17a6",
                   secondary="#645df5",

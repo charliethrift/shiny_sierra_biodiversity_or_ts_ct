@@ -1,17 +1,14 @@
 # Shiny App for Species Distribution and Wildfire Events 
-# 2025 / 02 / 15
+# Authors: Charlie Thrift, Tanvi Shah, Olivia Ross
+# Date: 2025 / 02 / 15
 
+# Loading packages
+librarian::shelf(shiny, here, dplyr, maps, tidyverse, janitor, 
+                 bslib, prism, ggplot2, tmap, sf, lubridate, leaflet) 
 
-library(shiny)
-library(here)
-library(dplyr)
-library(maps)
-library(tidyverse)
-library(janitor)
-library(bslib)
-
+# Setting our theme
 my_theme <- bs_theme(bootswatch = 'sketchy') %>% 
-  bs_theme_update(bg='#dcdec8',
+  bs_theme_update(bg='#ded',
                   fg='#323133',
                   primary="#1e17a6",
                   secondary="#645df5",
@@ -24,13 +21,44 @@ my_theme <- bs_theme(bootswatch = 'sketchy') %>%
                   heading_font = font_google("Rubik Dirt"),
                   font_scale = 1.25)
 
-# Data -----------------------------------------------------------------------
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+# Reading in Data:
+
+# Species Distributions--------------------------------------------------------#
 #### Species Distribution Data - only Plants in Mono County
 species_cols <- c('year','month', 'day', 'phylum','class','order','family',
                   'scientific_name','decimal_latitude', 'decimal_longitude' )
 species_df_all_years <- read_csv(here("shiny_sierra_biodiversity_or_ts_ct",
                             "data", "occurrences.csv")) %>% clean_names() %>%
   select(species_cols) %>% drop_na()
+
+# Calflora Data----------------------------------------------------------------#
+snarl_calflora <- st_read(here("data/snarl_calflora", "shz1198.shp"))
+
+# Wildfire Data----------------------------------------------------------------#
+fire <- st_read(here("data", "fire perimeters", "mtbs_perims_DD.shp"))
+
+# Sierra Nevada Border---------------------------------------------------------#
+snv <- st_read(here("data", "snv", "Sierra_Nevada_Conservancy_Boundary.shp"))
+
+# Climate Data-----------------------------------------------------------------#
+## Setting directory for prism data
+prism_set_dl_dir(here("data", "climate"))
+
+# Downloading climate normals
+get_prism_normals("tmax", "4km", annual = TRUE, keepZip = FALSE)
+get_prism_normals("ppt", "4km", annual = TRUE, keepZip = FALSE)
+
+# Downloading annual climate variables from 2000-2023
+get_prism_annual("tmax", years = 2000:2023, keepZip = FALSE)
+get_prism_annual("ppt", years = 2000:2023, keepZip = FALSE)
+
+# SNARL------------------------------------------------------------------------#
+# SNARL coordinates 
+snarl <- c(-118.83317, 37.61404)
+
+# SNARL reserve boundary
+snarl_poly <- st_read(here("data/SNARL", "SNARL_boundary.shp"))
 
 # Wrappers ------------------------------------------------------------------
 ## to avoid cluttering UI and Server  
@@ -58,8 +86,58 @@ wildfire_plot_year <- function(input_year){
     coord_map()
 }
 
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+# Olivia- Fire Map-------------------------------------------------------------#
 
-# UI --------------------------------------------------------------------------
+fire_years <- fire |>
+  mutate(Year = year(Ig_Date))|>
+  filter(Year %in% 2000:2023, Incid_Type == "Wildfire") |>
+  select(Year, Incid_Name, Incid_Type, geometry)
+
+# overlapping verticies, make geometry valid
+fire_years <- st_make_valid(fire_years)
+
+#clipping wildfire perimeters to SNV only (changing crs first)
+snv <- st_transform(snv, coords=c("lat", "long"), crs=4326)
+fire_years <- st_transform(fire_years, coords=c("lat", "long"), crs=4326)
+
+fire_snv <- st_intersection(fire_years, snv)
+
+# Changing fire year to a factor for the map
+fire_snv$Year <- as.factor(fire_snv$Year)
+
+# Making snarl an sf object for the map
+y <- 37.61404
+x <- -118.83317
+snarl_df <- cbind(x, y)
+snarl_df <- as.data.frame(snarl_df)
+snarl_sf <- st_as_sf(snarl_df, coords = c("x", "y"), crs = 4326)
+
+# Creating a time column and time series for our fire data
+fire_snv$Year_numeric <- as.numeric(as.character(fire_snv$Year)) 
+
+fire_time <- ts(fire_snv$Year_numeric, start = 2000, frequency = 1)
+
+# Render Tmap Output-----------------------------------------------------------#
+tmap_mode("view")
+
+output$fire_map <- tm_shape(snv) +
+  tm_borders("black", lwd=1.0) +
+  
+  tm_shape(fire_snv) +
+  tmap_options(check.and.fix = TRUE)+
+  tm_fill(col = "Year", palette = "PiYG", title="Fire Year") +
+  
+  tm_shape(snarl_poly) +
+  tm_dots(col = "orange") +
+  
+  tm_add_legend(type="fill", label = "SNARL", col = "orange") +
+  tm_add_legend(type="fill", label = "Sierra Nevada", col = "black")
+
+#tmap_animation(fire_map, time = "Year_numeric", width = 800, height = 600)  
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+# Creating the user interface
 ui <- navbarPage(
   theme = my_theme,
   title = "Biodiversity of the Sierra Nevada Aquatic Research Laboratory",
@@ -86,7 +164,7 @@ ui <- navbarPage(
               plotOutput("species_dist_plot"))
     ))),
   tabPanel(
-    "Fire in the Sierras",
+    "Fire History in the Sierras",
     fluidPage(
       titlePanel("Summary of Inputs"),
       verbatimTextOutput("output_summary_page")
@@ -106,13 +184,16 @@ ui <- navbarPage(
       titlePanel("About This App"),
       p("This app visualizes the biodiversity of the Sierra Nevada Aquatic Research Laboratory in Mammoth Lakes, California."),
       p("User inputs allow you to navigate the past, present, and future of biodiversity in this University of California site."),
-      p("MORE INFO ABOUT DATA AND CITATIONS TO BE INCLUDED HERE")
+      p("Data Used:"),
+      p("Plant Occurence Data: CalFlora"),
+      p("Wildfire Data: Monitoring Trends in Burns and Severity (MTBS)"),
+      p("Cliimate Data: PRISM")
     )
   )
 )
 
-
-# Server ----------------------------------------------------------------------
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+# Creating the server function
 server <- function(input, output, session) {
   output$species_dist_plot <- renderPlot({
     species_dist_plot_year(input$yr)
@@ -134,6 +215,7 @@ server <- function(input, output, session) {
       Checkbox = input$checkbox,
       Radio = input$radio_input
     ))
+    
 })
 }
 
