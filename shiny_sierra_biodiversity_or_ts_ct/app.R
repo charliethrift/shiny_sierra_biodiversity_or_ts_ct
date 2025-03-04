@@ -18,7 +18,7 @@ my_theme <- bs_theme(bootswatch = 'simplex') %>%
                   danger = "#f04b26",
                   base_font = font_google("Rasa"),
                   code_font = font_google("Atkinson Hyperlegible Mono"),
-                  heading_font = font_google("Rubik Dirt"),
+                  heading_font = font_google("Roboto"),
                   font_scale = 1.25)
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
@@ -37,7 +37,7 @@ species_df_all_years <- read_csv(here("shiny_sierra_biodiversity_or_ts_ct",
 snarl_calflora <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data/snarl_calflora", "shz1198.shp"))
 
 # Wildfire Data----------------------------------------------------------------#
-fire <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data", "fire perimeters", "mtbs_perims_DD.shp"))
+fire <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data", "fire_climate", "fire perimeters", "mtbs_perims_DD.shp"))
 
 # Sierra Nevada Border---------------------------------------------------------#
 snv <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data", "snv", "Sierra_Nevada_Conservancy_Boundary.shp"))
@@ -223,12 +223,19 @@ ui <- navbarPage(
     "About Page",
     fluidPage(
       titlePanel("About This App"),
-      p("This app visualizes the biodiversity of the Sierra Nevada Aquatic Research Laboratory in Mammoth Lakes, California."),
-      p("User inputs allow you to navigate the past, present, and future of biodiversity in this University of California site."),
+      p("This app visualizes the biodiversity of the Sierra Nevada Aquatic Research Laboratory (SNARL) in Mammoth Lakes, California. User inputs allow you to navigate the past, present, 
+      and future of biodiversity in this University of California site."),
+      p("SNARL is one of 42 natural reserves managed by the University of California system, 
+        which together comprise nearly 50,000 acres and represent all of California’s 
+        major ecosystems. Protected sites like SNARL allow researchers to ask complex 
+        ecological questions about the flora and fauna present. And, these sites can 
+        foster an understanding of the rich biodiversity—past, present, and future—that 
+        is responding during a time period of intense anthropogenic change."),
       p("Data Used:"),
-      p("Plant Occurence Data: CalFlora"),
+      p("Animal Occurrence Data: GBIF, Global Biodiversity Information Facility"),
+      p("Plant Occurrence Data: CalFlora"),
       p("Wildfire Data: Monitoring Trends in Burns and Severity (MTBS)"),
-      p("Cliimate Data: PRISM")
+      p("Climate Data: PRISM")
     )
   )
 )
