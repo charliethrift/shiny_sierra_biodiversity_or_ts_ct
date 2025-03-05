@@ -177,7 +177,7 @@ ui <- navbarPage(
                  inputId = "species_dist_year", 
                  sep = '',
                  label = "Year of Recorded Observation:",
-                 min = 1980, 
+                 min = 2000, 
                  max = 2025, 
                  value = 2000),
                  selectInput(
@@ -199,7 +199,7 @@ ui <- navbarPage(
                      inputId = "fire_year", 
                      sep = '',
                      label = "Year of Recorded Observation:",
-                     min = 1980, 
+                     min = 2000, 
                      max = 2025, 
                      value = 2000)),
                    tmapOutput("fire_map")
