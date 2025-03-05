@@ -144,7 +144,7 @@ snarl_sf <- st_as_sf(snarl_df, coords = c("x", "y"), crs = 4326)
 # Creating a time column and time series for our fire data
 fire_snv$Year_numeric <- as.numeric(as.character(fire_snv$Year))
 
-fire_time <- ts(fire_snv$Year_numeric, start = 2020, frequency = 1)
+fire_time <- ts(fire_snv$Year_numeric, start = 2000, frequency = 1)
 
 # Render Tmap Output-----------------------------------------------------------#
 
