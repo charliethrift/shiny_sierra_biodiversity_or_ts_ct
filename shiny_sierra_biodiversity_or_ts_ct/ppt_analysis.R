@@ -1,5 +1,9 @@
 # Data Analysis Script
 
+# This script runs a point pattern analysis for plant and animal observations at the SNARL Research
+# Station. Each point is an observation from Global Biodiversity Information Facility (GBIF), and INaturalist.
+# The G-function and L-function were calculated for animal and plant observations.
+
 
 # Installing packages:
 librarian::shelf(here, geodata, sf, terra, spatstat, tidyr, ggplot2)
