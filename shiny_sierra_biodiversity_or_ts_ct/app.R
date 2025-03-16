@@ -23,24 +23,24 @@ my_theme <- bs_theme(bootswatch = 'simplex') %>%
 
 
 
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+# READING IN DATA
 
-######  Read data #############################################################
-
-# Climate data
+# Climate plots (ggplot objects)
 load(here("shiny_sierra_biodiversity_or_ts_ct/data/tmax_snarl_plot.rdata"))
 load(here("shiny_sierra_biodiversity_or_ts_ct/data/ppt_snarl_plot.rdata"))
 
 # Shape files
 snv <- st_read(here("shiny_sierra_biodiversity_or_ts_ct", "data", "snv", "Sierra_Nevada_Conservancy_Boundary.shp"))
 snarl_poly <- st_read(here("shiny_sierra_biodiversity_or_ts_ct", "data", "SNARL", "SNARL_boundary.shp"))
-fire_snv <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data", "fire_perimeters", "fire_snv.shp"))
+fire_snv <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data", "fire_snv.shp"))
 
 # Species Occurrences
 occurrence_data_for_widget4 <- read_csv("data/occurrence_data_for_widget4_updated.csv")
 species_sf <- st_as_sf(occurrence_data_for_widget4, 
                        coords = c("decimalLongitude", "decimalLatitude"), 
                        crs = 4326)
-
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 
 # User Interface
 ui <- navbarPage(
@@ -61,7 +61,7 @@ ui <- navbarPage(
         is responding during a time period of intense anthropogenic change."),
       p("Data Used:"),
       p("Animal Occurrence Data: GBIF, Global Biodiversity Information Facility"),
-      p("Plant Occurrence Data: CalFlora"),
+      p("Plant Occurrence Data: "),
       p("Wildfire Data: Monitoring Trends in Burns and Severity (MTBS)"),
       p("Climate Data: PRISM")
     )
@@ -138,15 +138,24 @@ ui <- navbarPage(
             fluidPage(
               titlePanel("Point Pattern Analysis"),
               p("UI Placeholder."),
-              p("Point Pattern Analysis.")
+              p("Point Pattern Analysis."),
+              values <- (c("plants_gdistance", "plants_ldistance", "animals_gdistance", "animals_ldistance")), 
+              checkboxGroupInput("values", label = h4("Observed Flora and Fauna of SNARL"),
+                                 choices = list("G distance Flora" = plants_gdistance, "L distance Flora" = plants_ldistance,
+                                                "G distance Fauna" = animals_gdistance, "L distance Fauna" = animals_gdistance),
+                                 selected = plants_gdistance),
+              hr(),
+              fluidRow(column(4, verbatimTextOutput("values")))
                       )
             )
                 ))
 
 
+
 # Server
 server <- function(input, output, session) {
   
+# FIRE TAB--------------------------------------------------------------------#  
   # Fire reactive elements
   year_reactive <- reactive({
     fy <- as.factor(input$fire_year)
@@ -157,7 +166,7 @@ server <- function(input, output, session) {
       tm_borders("black", lwd=1.0) +
       
       tm_shape(year_reactive()) +
-      tm_fill(col = "Year", palette = "PiYG", title="Fire Year") +
+      tm_fill(col = "red") +
       
       tm_shape(snarl_poly) +
       tm_dots(col = "orange") +
@@ -166,6 +175,7 @@ server <- function(input, output, session) {
       tm_add_legend(type="fill", label = "Sierra Nevada", col = "black")
   })
   
+# CLIMATE TAB-----------------------------------------------------------------#  
   # Climate data reactive elements
   output$climate_plot <- renderPlot({
     if (input$climate_plot_select == "temp_select") {
@@ -184,6 +194,7 @@ server <- function(input, output, session) {
   #   ppt_snarl_plot
   # })
   
+# SPECIES TAB------------------------------------------------------------------#  
   # Species dist reactive elements
   
   # populate choices from the input in the widget
@@ -234,6 +245,11 @@ server <- function(input, output, session) {
                 legend.show = FALSE) 
     
   })
+  
+# POINT PATTERN TAB------------------------------------------------------------#
+output$value <- renderPrint({input$values})
+
+
   
 }
 
