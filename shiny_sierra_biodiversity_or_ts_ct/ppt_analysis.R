@@ -1,8 +1,18 @@
 # Data Analysis Script
+# Author: Olivia Ross
+# Date: 10 March 2025
 
-# This script runs a point pattern analysis for plant and animal observations at the SNARL Research
-# Station. Each point is an observation from Global Biodiversity Information Facility (GBIF), and INaturalist.
-# The G-function and L-function were calculated for animal and plant observations.
+# This script investigates nearest neighbor patterns within the plant and animal observations at the SNARL Research
+# Station. Each point is an observation from Global Biodiversity Information Facility (GBIF) and INaturalist, and 
+# represents one species, geospatial information for that species, and other attributes.
+
+# We completed a nearest neighbor analysis using the G-Function and the K-function for both plants and animals. 
+
+# 1). The G-function calculates the the proportion of plant and observations that occur within a nearest neighbor 
+# distance, r. 
+
+# 2). Ripley's K-function calculates the distance between all observations in a study window by observing how the 
+# number of observations within the region changes as the radius surrounding a single point increases. 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 # Installing packages:
@@ -11,9 +21,8 @@ librarian::shelf(here, geodata, sf, terra, spatstat, tidyr, ggplot2)
 # Loading in GBIF data & SNARL polygon 
 animals_raw <- read.csv(here("shiny_sierra_biodiversity_or_ts_ct/data/gbif_snarl_plus_files", "gbif_snarl_plus_surround_animals.csv"))
 plants_raw <- read.csv(here("shiny_sierra_biodiversity_or_ts_ct/data/gbif_snarl_plus_files", "gbif_snarl_plus_surround_plants.csv"))
-  
 snarl <- st_read(here("shiny_sierra_biodiversity_or_ts_ct", "data/SNARL", "SNARL_boundary.shp"))
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 # Point pattern analysis for animal data
 
 # projecting animal csv
@@ -38,23 +47,28 @@ snarl_window <- as.owin(snarl)
 # Combining as a point pattern object (points + window):
 animals_snarl_ppp <- ppp(animals_ppp$x, animals_ppp$y, window = snarl_window)
 
-#G function-Animals------------------------------------------------------------#
+# After running the point pattern analysis, we receive a warning "data contain duplicate points"; we reviewed the initial animals_raw 
+# data frame to ensure there were no duplicate observations, however, because the study window is quite small and the 
+# observations were close together, after projecting to 2D and creating a point pattern analysis, some points shared the same 
+# "UTM Y" or "UTM X" values, producing this warning. 
+
+#G function-Animals-------------------------------------------------------------------------------------------#
 # Distance to calculate G(r)
-r_vec <- seq(0, 20, by = 1) # 30 meters
+r_vec <- seq(0, 15, by = 1) # 15 meters
 
 # calculating the G value over a sequence of 30 m, for 200 simulations
-gfunction_out <- envelope(animals_snarl_ppp, fun = Gest, r = r_vec, 
+animals_gfunctionout <- envelope(animals_snarl_ppp, fun = Gest, r = r_vec, 
                           nsim = 200) 
 
 plot(gfunction_out)
 
-# creating a data frame and pivoting for ggplot 
-gfunction_out_long <- gfunction_out |>
+# Creating a data frame and pivoting for ggplot 
+animals_gfunctionout_long <- gfunction_out |>
   as.data.frame() |>
   pivot_longer(cols = obs:hi, names_to = "model", values_to = "g_val")
 
 # plotting out g scores and distances 
-g_distance <- ggplot(data = gfunction_out_long, aes(x = r, y = g_val, group = model)) +
+animals_gdistance <- ggplot(data = gfunction_out_long, aes(x = r, y = g_val, group = model)) +
   geom_line(aes(color = model), lwd = 1.3) +
   scale_color_manual(values = c("blueviolet", "chartreuse3", "deeppink", "cornflowerblue"),
                      name = "Model", labels = c("High", "Low", "Observed", "Theoretical")) +
@@ -63,26 +77,29 @@ g_distance <- ggplot(data = gfunction_out_long, aes(x = r, y = g_val, group = mo
         panel.grid.minor = element_blank(), axis.line = element_line(color = "black")) +
   labs(x = 'Radius (m)', y = 'G(r)')
 
-g_distance
+animals_gdistance
 
 # saving to import with app
-save(g_distance, file = here("shiny_sierra_biodiversity_or_ts_ct/data/g_distance.rdata" ))
+save(animals_gdistance, file = here("shiny_sierra_biodiversity_or_ts_ct/data/animals_gdistance.rdata" ))
 
-# L function-Animals-----------------------------------------------------------#
+# L function-Animals-------------------------------------------------------------------------------------------#
 
-#boundary is 57.39 acres, which is 232,249 square meters, took the square root of this 
+# The SNARL boundary is 57.39 acres, which is 232,249 square meters, took the square root of this 
 # for our sequence (check to see if this is correct?)
-r_vec2 <- seq(0, 482, by = 40) 
+r_vec2 <- seq(0, 482, by = 2) 
 
-lfunction_out <- envelope(animals_snarl_ppp, fun = Lest, r = r_vec2, 
+animals_lfunctionout <- envelope(animals_snarl_ppp, fun = Lest, r = r_vec2, 
                           nsim = 10)
-plot(lfunction_out)
 
-lfunction_long <- lfunction_out %>% 
+plot(animals_lfunctionout)
+
+# Creating a data frame and pivoting results for plotting
+animals_lfunctionlong <- animals_lfunctionout %>% 
   as.data.frame() %>% 
   pivot_longer(cols = obs:hi, names_to = "model", values_to = "l")
 
-l_distance <- ggplot(data = lfunction_long, aes(x = r, y = l)) +
+# Plotting results
+animals_ldistance <- ggplot(data = animals_lfunctionlong, aes(x = r, y = l)) +
   geom_line(aes(color = model), lwd = 1.3) +
   scale_color_manual(values = c("blueviolet", "chartreuse3", "deeppink", "cornflowerblue"),
                      name = "Model", labels = c("High", "Low", "Observed", "Theoretical")) +
@@ -91,12 +108,12 @@ l_distance <- ggplot(data = lfunction_long, aes(x = r, y = l)) +
         panel.grid.minor = element_blank(), axis.line = element_line(color = "black")) +
   labs(x = 'Radius (m)', y = 'L(r)')
 
-l_distance
+animals_ldistance
 
 # saving to import with app
-save(l_distance, file = here("shiny_sierra_biodiversity_or_ts_ct/data/l_distance.rdata" ))
+save(animals_ldistance, file = here("shiny_sierra_biodiversity_or_ts_ct/data/animals_ldistance.rdata"))
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 # Point pattern analysis for plants 
 
 # projecting plant csv
@@ -116,23 +133,23 @@ plants_ppp <- as.ppp(plants_snarl)
 # Combining as a point pattern object (points + window):
 plants_snarl_ppp <- ppp(plants_ppp$x, plants_ppp$y, window = snarl_window)
 
-#G function-Animals------------------------------------------------------------#
+#G function-Plants---------------------------------------------------------------------------------------------#
 # Distance to calculate G(r)
-r_vec <- seq(0, 20, by = 1) # 30 meters
+r_vec <- seq(0, 30, by = 1) # 15 meters
 
 # calculating the G value over a sequence of 30 m, for 200 simulations
-gfunction_out <- envelope(plants_snarl_ppp, fun = Gest, r = r_vec, 
+plants_gfunctionout <- envelope(plants_snarl_ppp, fun = Gest, r = r_vec, 
                           nsim = 200) 
 
-plot(gfunction_out)
+plot(plants_gfunctionout)
 
 # creating a data frame and pivoting for ggplot 
-gfunction_out_long <- gfunction_out |>
+plants_gfunctionoutlong <- plants_gfunctionout |>
   as.data.frame() |>
   pivot_longer(cols = obs:hi, names_to = "model", values_to = "g_val")
 
 # plotting out g scores and distances 
-g_distance_plants <- ggplot(data = gfunction_out_long, aes(x = r, y = g_val, group = model)) +
+plants_gdistance <- ggplot(data = plants_gfunctionoutlong, aes(x = r, y = g_val, group = model)) +
   geom_line(aes(color = model), lwd = 1.3) +
   scale_color_manual(values = c("blueviolet", "chartreuse3", "deeppink", "cornflowerblue"),
                      name = "Model", labels = c("High", "Low", "Observed", "Theoretical")) +
@@ -141,26 +158,27 @@ g_distance_plants <- ggplot(data = gfunction_out_long, aes(x = r, y = g_val, gro
         panel.grid.minor = element_blank(), axis.line = element_line(color = "black")) +
   labs(x = 'Radius (m)', y = 'G(r)')
 
-g_distance_plants
+plants_gdistance
 
 # saving to import with app
-save(g_distance_plants, file = here("shiny_sierra_biodiversity_or_ts_ct/data/g_distance_plants.rdata" ))
+save(plants_gdistance, file = here("shiny_sierra_biodiversity_or_ts_ct/data/plants_gdistance.rdata" ))
 
-# L function-Animals-----------------------------------------------------------#
+# L function-Plants-------------------------------------------------------------------------------------------#
 
-#boundary is 57.39 acres, which is 232,249 square meters, took the square root of this 
-# for our sequence (check to see if this is correct?)
-r_vec2 <- seq(0, 482, by = 40) 
+# distance to search for neighboring points
+r_vec2 <- seq(0, 482, by = 2) 
 
-lfunction_out <- envelope(animals_snarl_ppp, fun = Lest, r = r_vec2, 
+plants_lfunctionout <- envelope(plants_snarl_ppp, fun = Lest, r = r_vec2, 
                           nsim = 10)
-plot(lfunction_out)
+plot(plants_lfunctionout)
 
-lfunction_long <- lfunction_out %>% 
+# Creating a data frame and pivoting to plot our results
+plants_lfunctionlong <- plants_lfunctionout %>% 
   as.data.frame() %>% 
   pivot_longer(cols = obs:hi, names_to = "model", values_to = "l")
 
-l_distance <- ggplot(data = lfunction_long, aes(x = r, y = l)) +
+# Plotting our results
+plants_ldistance <- ggplot(data = plants_lfunctionlong, aes(x = r, y = l)) +
   geom_line(aes(color = model), lwd = 1.3) +
   scale_color_manual(values = c("blueviolet", "chartreuse3", "deeppink", "cornflowerblue"),
                      name = "Model", labels = c("High", "Low", "Observed", "Theoretical")) +
@@ -169,8 +187,8 @@ l_distance <- ggplot(data = lfunction_long, aes(x = r, y = l)) +
         panel.grid.minor = element_blank(), axis.line = element_line(color = "black")) +
   labs(x = 'Radius (m)', y = 'L(r)')
 
-l_distance
+plants_ldistance
 
 # saving to import with app
-save(l_distance, file = here("shiny_sierra_biodiversity_or_ts_ct/data/l_distance.rdata" ))
+save(plants_ldistance, file = here("shiny_sierra_biodiversity_or_ts_ct/data/plants_ldistance.rdata"))
 
