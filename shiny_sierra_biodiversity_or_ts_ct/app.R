@@ -92,7 +92,7 @@ ui <- navbarPage(
       
       
       
-  ),
+  )),
   
   tabPanel("Fire History in the Sierra",
     fluidPage(
@@ -178,7 +178,7 @@ ui <- navbarPage(
   
          ) #fluid page
       ) #tabset pannel
-  ) # navbarPage
+ # navbarPage
 
 
 
