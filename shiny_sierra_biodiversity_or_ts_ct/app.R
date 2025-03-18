@@ -5,7 +5,7 @@
 
 # Loading packages
 librarian::shelf(shiny, here, dplyr, maps, tidyverse, janitor, 
-                 bslib, prism, ggplot2, tmap, sf, lubridate, leaflet) 
+                 bslib, prism, ggplot2, tmap, sf, lubridate, leaflet, knitr, kableExtra) 
 # Setting our theme
 my_theme <- bs_theme(bootswatch = 'simplex') %>% 
   bs_theme_update(bg='#ded',
@@ -173,14 +173,11 @@ ui <- navbarPage(
                   observations within SNARL are spatially clustered. The G-function calculates spatial distance between each point
                   and its neighbor, while the L-function calcualates the number of points within a given distance, r, from each observation
                   point. G-distance and L-distance values are included for Flora and Fauna within SNARL."),
-                uiOutput("ppt_datatable"),
-                )
-              
-              
-              ) # Point Pattern Analysis
-                 ) # tabset Panel
-                   )
-                     )
+                uiOutput("ppt_datatable")
+              ))) 
+  
+         ) #fluid page
+      ) #tabset pannel
   ) # navbarPage
 
 
