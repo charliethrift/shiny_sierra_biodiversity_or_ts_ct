@@ -30,6 +30,12 @@ my_theme <- bs_theme(bootswatch = 'simplex') %>%
 load(here("shiny_sierra_biodiversity_or_ts_ct/data/tmax_snarl_plot.rdata"))
 load(here("shiny_sierra_biodiversity_or_ts_ct/data/ppt_snarl_plot.rdata"))
 
+# Distance data
+load(here("shiny_sierra_biodiversity_or_ts_ct/data/plants_gdistance.rdata"))
+load(here("shiny_sierra_biodiversity_or_ts_ct/data/plants_ldistance.rdata"))
+load(here("shiny_sierra_biodiversity_or_ts_ct/data/animals_gdistance.rdata"))
+load(here("shiny_sierra_biodiversity_or_ts_ct/data/animals_ldistance.rdata"))
+
 # Shape files
 snv <- st_read(here("shiny_sierra_biodiversity_or_ts_ct", "data", "snv", "Sierra_Nevada_Conservancy_Boundary.shp"))
 snarl_poly <- st_read(here("shiny_sierra_biodiversity_or_ts_ct", "data", "SNARL", "SNARL_boundary.shp"))
@@ -59,12 +65,21 @@ ui <- navbarPage(
         ecological questions about the flora and fauna present. And, these sites can 
         foster an understanding of the rich biodiversity—past, present, and future—that 
         is responding during a time period of intense anthropogenic change."),
-      p("Data Used:"),
+      # p("Data Used:",font ),
+      tags$h5("Data Used:"),
       p("Animal Occurrence Data: GBIF, Global Biodiversity Information Facility"),
       p("Plant Occurrence Data: "),
       p("Wildfire Data: Monitoring Trends in Burns and Severity (MTBS)"),
-      p("Climate Data: PRISM")
-    )
+      p("Climate Data: PRISM"),
+      p("Authors: Olivia Ross, Charlie Thrift, Tanvi Shah"),
+      fluidRow(
+        column(width = 4, tags$img(height = 250, width = 500, src = "nrs_logo.png", alt = "SNARL logo.")),
+        column(width = 3, offset = 1, tags$img(height = 250, width = 300, src = "snarl_image.jpg",alt = "facility at SNARL")),
+        column(width = 3, tags$img(height = 250, width = 350, src = "snarl_streams.jpeg", alt = "streams at SNARL"),
+        alt = "SNARL logo.")),
+      
+      )
+      
   ),
   
   tabPanel("Fire History in the Sierras",
@@ -84,11 +99,13 @@ ui <- navbarPage(
   tabPanel("Climate Data",
            fluidPage(
              titlePanel(
-               "Annual Max Temperature and Annual Precipitation"),
+               "Trends in Climate Variables at SNARL"),
              sidebarLayout(
                sidebarPanel(
                  radioButtons("climate_plot_select", label = "Select Climate Variable to Display",
-                              choices = c("Temperature" = "temp_select", "Precipitation" = "ppt_select"),
+                              choices = c("Air Temperature" = "temp_select",
+                                          "Precipitation" = "ppt_select",
+                                          "Soil Temperature" = "soil_select"),
                               selected = "temp_select")
                ),
                
@@ -96,12 +113,6 @@ ui <- navbarPage(
                  plotOutput("climate_plot")  # This will display the selected plot
                )
              )
-           #                plotOutput("distPlot"))
-           #   p("Max Annual Temperature at SNARL"),
-           #   plotOutput("tmax_plot"),
-           #   p("Average Precipitation at SNARL"),
-           #   plotOutput("ppt_plot")
-           # )
   )),
    tabPanel("Species that are at SNARL",
             fluidPage(
@@ -122,33 +133,42 @@ ui <- navbarPage(
                 hr(),
                 fluidRow(column(3, verbatimTextOutput("value")))
               ),
-              
-              mainPanel(
-                "Map of Species Occurrences",
-                plotOutput("species_dist_plot")
-              ),
+              # 
+              # mainPanel(
+              #   "Map of Species Occurrences",
+              #   plotOutput("species_dist_plot")
+              # ),
               fluidRow(
-                column(6, plotOutput("species_occurrences_plot", height = "300px")),  # Make plot column larger
+                column(6, plotOutput("species_occurrences_plot", height = "500px")),  # Make plot column larger
                 column(6, tmapOutput("species_occurrences_map", height = "300px"))    # Make map column smaller
               )
               
    )),
-   
-   tabPanel("Point Pattern Analysis",
-            fluidPage(
-              titlePanel("Point Pattern Analysis"),
-              p("UI Placeholder."),
+    
+     tabPanel("Point Pattern Analysis",
+              fluidPage(
+                titlePanel("Point Pattern Analysis"),
               p("Point Pattern Analysis."),
-              values <- (c("plants_gdistance", "plants_ldistance", "animals_gdistance", "animals_ldistance")), 
-              checkboxGroupInput("values", label = h4("Observed Flora and Fauna of SNARL"),
-                                 choices = list("G distance Flora" = plants_gdistance, "L distance Flora" = plants_ldistance,
-                                                "G distance Fauna" = animals_gdistance, "L distance Fauna" = animals_gdistance),
-                                 selected = plants_gdistance),
-              hr(),
-              fluidRow(column(4, verbatimTextOutput("values")))
-                      )
-            )
-                ))
+                # values <- (c("plants_gdistance", "plants_ldistance", "animals_gdistance", "animals_ldistance")),
+                # checkboxGroupInput("values", label = h4("Observed Flora and Fauna of SNARL"),
+                #                    choices = list("G distance Flora" = "select_gplant", "L distance Flora" = "select_lplant",
+                #                                  "G distance Fauna" = "select_ganimal", "L distance Fauna" = "select_lanimal"),
+                #                    selected = "select_gplant"),
+              radioButtons("pattern_select", label = "Select Point Pattern Analysis Results to Display",
+                           choices = c("G distance Flora" = "select_gplant", "L distance Flora" = "select_lplant",
+                                          "G distance Fauna" = "select_ganimal", "L distance Fauna" = "select_lanimal"),
+                           selected = "select_gplant"),
+                hr(),
+              
+              mainPanel(
+                plotOutput("pattern_plot"),
+                p("here is a figure caption")# This will display the selected plot
+              )
+              
+     ), # fluidPage
+              ) # Point Pattern Analysis
+                ) # tabset Panel
+  ) # navbarPage
 
 
 
@@ -182,17 +202,23 @@ server <- function(input, output, session) {
       # Render Tmax Plot 
       tmax_snarl_plot
     } else if (input$climate_plot_select == "ppt_select") {
-      # Render Climate Plot
+      # Render Precipitation Plot
       ppt_snarl_plot
+    } else if (input$climate_plot_select == "soil_select") {
+      # Render Soil Plot
+      soil_plot
     }
   })
   
-  # output$tmax_plot <- renderPlot({
-  #   tmax_snarl_plot
-  # })
-  # output$ppt_plot <- renderPlot({
-  #   ppt_snarl_plot
-  # })
+  output$tmax_plot <- renderPlot({
+    tmax_snarl_plot
+  })
+  output$ppt_plot <- renderPlot({
+    ppt_snarl_plot
+  })
+  output$soil_temp_plot <- renderPlot({
+    soil_plot
+  })
   
 # SPECIES TAB------------------------------------------------------------------#  
   # Species dist reactive elements
@@ -240,7 +266,7 @@ server <- function(input, output, session) {
               size = 0.5,
               legend.show = FALSE,
               id = "species") +  # Color by species
-      #tmap_options(max.categories = 214)+
+      # tmap_options(max.categories = 214)+ # CREATES ERROR WHEN uncommmented 
       tm_layout(main.title = paste0("Species Occurrences of ", input$class_common),
                 legend.show = FALSE) 
     
@@ -248,10 +274,36 @@ server <- function(input, output, session) {
   
 # POINT PATTERN TAB------------------------------------------------------------#
 output$value <- renderPrint({input$values})
+output$pattern_plot <- renderPlot({
+  if (input$pattern_select == "select_gplant") {
+    plants_gdistance
+  } else if (input$pattern_select == "select_ganimal") {
+    animals_gdistance
+  }
+  else if (input$pattern_select == "select_lplant") {
+    plants_ldistance
+  }
+   else if (input$pattern_select == "select_lanimal") {
+  animals_ldistance
+   }
 
+})
+  output$plants_gdistance_plot<- renderPlot({
+    plants_gdistance
+  })
+  output$plants_ldistance_plot<- renderPlot({
+    plants_ldistance
+  })
 
+  output$animals_gdistance_plot<- renderPlot({
+    animals_gdistance
+  })
+  output$animals_ldistance_plot<- renderPlot({
+    animals_ldistance
+  })
   
-}
+ }
+
 
 
 
