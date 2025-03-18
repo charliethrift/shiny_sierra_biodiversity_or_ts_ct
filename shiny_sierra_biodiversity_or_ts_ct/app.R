@@ -1,4 +1,4 @@
-# Updated version for file organization, 5March2025
+# Updated version for file organization, 5 March 2025
 # Shiny app exploring biodiversity at the Sierra Nevada Aquatic Research Laboratory (SNARL)
 # Authors: Charlie Thrift, Tanvi Shah, Olivia Ross
 # Date: 2025 / 03 / 05
@@ -21,14 +21,15 @@ my_theme <- bs_theme(bootswatch = 'simplex') %>%
                   heading_font = font_google("Roboto"),
                   font_scale = 1.25)
 
-
-
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
 # READING IN DATA
 
-# Climate plots (ggplot objects)
+# Climate plots
 load(here("shiny_sierra_biodiversity_or_ts_ct/data/tmax_snarl_plot.rdata"))
 load(here("shiny_sierra_biodiversity_or_ts_ct/data/ppt_snarl_plot.rdata"))
+
+# Soil Data
+load(here("shiny_sierra_biodiversity_or_ts_ct/data/soil_plot.rdata"))
 
 # Distance data
 load(here("shiny_sierra_biodiversity_or_ts_ct/data/plants_gdistance.rdata"))
@@ -39,6 +40,7 @@ load(here("shiny_sierra_biodiversity_or_ts_ct/data/animals_ldistance.rdata"))
 # Shape files
 snv <- st_read(here("shiny_sierra_biodiversity_or_ts_ct", "data", "snv", "Sierra_Nevada_Conservancy_Boundary.shp"))
 snarl_poly <- st_read(here("shiny_sierra_biodiversity_or_ts_ct", "data", "SNARL", "SNARL_boundary.shp"))
+snarl_sf <- st_read(here("shiny_sierra_biodiversity_or_ts_ct", "data", "SNARL", "snarl_point.shp"))
 fire_snv <- st_read(here("shiny_sierra_biodiversity_or_ts_ct/data", "fire_snv.shp"))
 
 # Species Occurrences
@@ -66,23 +68,33 @@ ui <- navbarPage(
         foster an understanding of the rich biodiversity—past, present, and future—that 
         is responding during a time period of intense anthropogenic change."),
       # p("Data Used:",font ),
-      tags$h5("Data Used:"),
-      p("Animal Occurrence Data: GBIF, Global Biodiversity Information Facility"),
-      p("Plant Occurrence Data: "),
-      p("Wildfire Data: Monitoring Trends in Burns and Severity (MTBS)"),
-      p("Climate Data: PRISM"),
       p("Authors: Olivia Ross, Charlie Thrift, Tanvi Shah"),
+      #fluidRow(column(width = 4, tags$img(height = 250, width = 500, src = "nrs_logo.png", alt = "SNARL logo.")),
       fluidRow(
         column(width = 4, tags$img(height = 250, width = 500, src = "nrs_logo.png", alt = "SNARL logo.")),
         column(width = 3, offset = 1, tags$img(height = 250, width = 300, src = "snarl_image.jpg",alt = "facility at SNARL")),
         column(width = 3, tags$img(height = 250, width = 350, src = "snarl_streams.jpeg", alt = "streams at SNARL"),
         alt = "SNARL logo.")),
+      p(),
+      tags$h5("Data Used:"),
+      p("Animal & Occurrence Data: GBIF, Global Biodiversity Information Facility: 
+        GBIF.org (03 March 2025) GBIF Occurrence Download https://doi.org/10.15468/dl.4eyxqe"),
+      p("Wildfire Data: Monitoring Trends in Burns and Severity (MTBS):
+        U.S. Geological Survey, Earth Resources and Observation Scinece, U.S. Forest Service. 
+        (2005). Monitoring Trends in Burn Severity (MTBS) [Online]. https://www.mtbs.gov/direct-download"),
+      p("Climate Data: PRISM:
+        Daly, C., Halbleib, M., Smith, J. H., Gibson, W. P., Doggett, M. K., Taylor, G. H., Curtis, J., 
+        & Pasteris, P. P. (2008). Physiographically sensitive mapping of climatological temperature and 
+        precipitation across the conterminous United States. International Journal of Climatology, 28(15), 
+        2031–2064. https://doi.org/10.1002/joc.1688"),
+      p("Soil Data:dendra science. (n.d.). Soil Temp 500 mm Avg [Dataset]. 
+      https://dendra.science/orgs/ucnrs/datastreams?faceted=true%26scheme%3Ddq"),
       
-      )
+      
       
   ),
   
-  tabPanel("Fire History in the Sierras",
+  tabPanel("Fire History in the Sierra",
     fluidPage(
       sidebarPanel("Choose Inputs",
                    sliderInput(
@@ -148,12 +160,7 @@ ui <- navbarPage(
      tabPanel("Point Pattern Analysis",
               fluidPage(
                 titlePanel("Point Pattern Analysis"),
-              p("Point Pattern Analysis."),
-                # values <- (c("plants_gdistance", "plants_ldistance", "animals_gdistance", "animals_ldistance")),
-                # checkboxGroupInput("values", label = h4("Observed Flora and Fauna of SNARL"),
-                #                    choices = list("G distance Flora" = "select_gplant", "L distance Flora" = "select_lplant",
-                #                                  "G distance Fauna" = "select_ganimal", "L distance Fauna" = "select_lanimal"),
-                #                    selected = "select_gplant"),
+              p("Point Pattern Analysis- G-function & L-function."),
               radioButtons("pattern_select", label = "Select Point Pattern Analysis Results to Display",
                            choices = c("G distance Flora" = "select_gplant", "L distance Flora" = "select_lplant",
                                           "G distance Fauna" = "select_ganimal", "L distance Fauna" = "select_lanimal"),
@@ -162,12 +169,18 @@ ui <- navbarPage(
               
               mainPanel(
                 plotOutput("pattern_plot"),
-                p("here is a figure caption")# This will display the selected plot
-              )
+                p("We calculated the G-function and a standardized version of Ripley's K-function L-function) to infer whether the GBIF
+                  observations within SNARL are spatially clustered. The G-function calculates spatial distance between each point
+                  and its neighbor, while the L-function calcualates the number of points within a given distance, r, from each observation
+                  point. G-distance and L-distance values are included for Flora and Fauna within SNARL."),
+                uiOutput("ppt_datatable"),
+                )
               
-     ), # fluidPage
+              
               ) # Point Pattern Analysis
-                ) # tabset Panel
+                 ) # tabset Panel
+                   )
+                     )
   ) # navbarPage
 
 
@@ -186,13 +199,13 @@ server <- function(input, output, session) {
       tm_borders("black", lwd=1.0) +
       
       tm_shape(year_reactive()) +
-      tm_fill(col = "red") +
+      tm_fill(fill = "red") +
       
-      tm_shape(snarl_poly) +
-      tm_dots(col = "orange") +
+      tm_shape(snarl_sf) +
+      tm_dots(fill="purple", size=0.5) +
       
-      tm_add_legend(type="fill", label = "SNARL", col = "orange") +
-      tm_add_legend(type="fill", label = "Sierra Nevada", col = "black")
+      tm_add_legend(type="polygons", labels = "Sierra Nevada", col = "black") +
+      tm_add_legend(type="fill", labels  = "SNARL", col = "purple")
   })
   
 # CLIMATE TAB-----------------------------------------------------------------#  
@@ -273,7 +286,7 @@ server <- function(input, output, session) {
   })
   
 # POINT PATTERN TAB------------------------------------------------------------#
-output$value <- renderPrint({input$values})
+#output$value <- renderPrint({input$values})
 output$pattern_plot <- renderPlot({
   if (input$pattern_select == "select_gplant") {
     plants_gdistance
@@ -302,11 +315,24 @@ output$pattern_plot <- renderPlot({
     animals_ldistance
   })
   
- }
+  
 
+output$ppt_datatable <- renderUI({
+  
+  table <- data.frame(
+    Analyses = c("Animals G-function", "Plants G-function", "Animals L-function", "Plants L-function"),
+    Radius = c("10", "15", "482", "482"),
+    Simulations = c("200", "200", "20", "20"),
+    Significance = c("0.00995", "0.00995", "0.0952", "0.0952")
+  )
+    
+    ppt_table <- kable(table, caption = "G-function and L-function statistics for animals and plants at SNARL") |>
+      kable_styling(bootstrap_options = c("striped", "hover"))
+    
+    HTML(ppt_table)
+})  
 
-
-
+}
 
 # Complete app by combining UI and server components
 shinyApp(ui, server)
