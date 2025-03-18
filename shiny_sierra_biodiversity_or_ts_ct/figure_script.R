@@ -139,6 +139,9 @@ snarl_df <- cbind(x, y)
 snarl_df <- as.data.frame(snarl_df)
 snarl_sf <- st_as_sf(snarl_df, coords = c("x", "y"), crs = 4326)
 
+# Writing to data folder to read into app
+st_write(snarl_sf, here("shiny_sierra_biodiversity_or_ts_ct/data/SNARL", "snarl_point.shp"))
+
 # Creating a time column and time series for our fire data
 fire_snv$Year_numeric <- as.numeric(as.character(fire_snv$Year)) 
 
@@ -170,7 +173,6 @@ tmap_mode("view")
  #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
  # Soil Data ------------------------------------------------------------------#
 
- 
  # NOTE: the below script is commented out due to the fact that the soil data is
  # a large file size (18 MB). This script was run previously to generate the soil_plot
  # it remains commented to avoid errors due to the exclusion of the soil_data.csv in 
@@ -183,40 +185,40 @@ tmap_mode("view")
 # 
 # # read data and wrangle
 #  soil_data <- read_csv(here("shiny_sierra_biodiversity_or_ts_ct/data/soil_data.csv"))
-#  soil_data_daily <- soil_data %>% clean_names() %>%
-#    mutate(date = lubridate::mdy_hm(time)) %>% 
-#    mutate(date = floor_date(date, unit = "day")) %>%
-#    group_by(date) %>%
-#    summarize(mean_50mm = mean(x50mm_deg_c), mean_500mm = mean(x500mm_deg_c))
-#  
-#  
-#  # use lubridate package to reformat date
-#  soil_ts <- soil_data_daily %>%
-#    mutate(date = as.Date(date)) %>%
-#    as_tsibble(key = NULL, 
-#               index = date)  ## time index, here our column is `date`
-# 
-#  # generate season plots
-#  season_plot_50m <- 
-#    soil_ts %>% 
-#    gg_season(y = mean_50mm, pal = hcl.colors(n = 9)) +
-#    theme_minimal()+
-#    labs(x = "Month")+
-#    theme(axis.title.y = element_blank())+
-#    ggtitle("50 mm Soil Depth")
-#  
-#  season_plot_500m <- 
-#    soil_ts %>% 
-#    gg_season(y = mean_500mm, pal = hcl.colors(n = 9)) +
-#    theme_minimal() +
-#    labs(x = "Month")+
-#    ggtitle("500 mm Soil Depth")
-#  
-#  
-#  soil_plot <- season_plot_50m / season_plot_500m + plot_layout(guides = "collect")+
-#    plot_annotation(caption = "Seasonal analysis of soil temperature at 500mm depth shows slight decrease, while temperature at 50mm shows no observable trend")
-#  
-#  # save ggplot object for reading
-#  save(soil_plot, file = here("shiny_sierra_biodiversity_or_ts_ct/data/soil_plot.rdata" ))
+soil_data_daily <- soil_data %>% clean_names() %>%
+    mutate(date = lubridate::mdy_hm(time)) %>% 
+    mutate(date = floor_date(date, unit = "day")) %>%
+    group_by(date) %>%
+    summarize(mean_50mm = mean(x50mm_deg_c), mean_500mm = mean(x500mm_deg_c))
+  
+  
+# use lubridate package to reformat date
+  soil_ts <- soil_data_daily %>%
+   mutate(date = as.Date(date)) %>%
+    as_tsibble(key = NULL, 
+               index = date)  ## time index, here our column is `date`
+ 
+# generate season plots
+season_plot_50m <- 
+   soil_ts %>% 
+   gg_season(y = mean_50mm, pal = hcl.colors(n = 9)) +
+   theme_minimal()+
+   labs(x = "Month")+
+  theme(axis.title.y = element_blank())+
+  ggtitle("50 mm Soil Depth")
+ 
+season_plot_500m <- 
+    soil_ts %>% 
+    gg_season(y = mean_500mm, pal = hcl.colors(n = 9)) +
+    theme_minimal() +
+    labs(x = "Month")+
+    ggtitle("500 mm Soil Depth")
+ 
+ 
+soil_plot <- season_plot_50m / season_plot_500m + plot_layout(guides = "collect")+
+plot_annotation(caption = "Seasonal analysis of soil temperature at 500mm depth shows slight decrease, while temperature at 50mm shows no observable trend")
+  
+# save ggplot object for reading
+save(soil_plot, file = here("shiny_sierra_biodiversity_or_ts_ct/data/soil_plot.rdata" ))
 
    
