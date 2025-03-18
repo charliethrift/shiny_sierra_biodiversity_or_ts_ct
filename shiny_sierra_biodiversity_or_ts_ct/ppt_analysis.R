@@ -45,7 +45,7 @@ animals_ppp <- as.ppp(animals_snarl)
 snarl_window <- as.owin(snarl) 
 
 # Combining as a point pattern object (points + window):
-animals_snarl_ppp <- ppp(animals_ppp$x, animals_ppp$y, window = snarl_window)
+animals_snarl_ppp <- ppp(animals_ppp$x, animals_ppp$y, window = snarl_window, unitname=c("meter", "meters"))
 
 # After running the point pattern analysis, we receive a warning "data contain duplicate points"; we reviewed the initial animals_raw 
 # data frame to ensure there were no duplicate observations, however, because the study window is quite small and the 
@@ -54,28 +54,31 @@ animals_snarl_ppp <- ppp(animals_ppp$x, animals_ppp$y, window = snarl_window)
 
 #G function-Animals-------------------------------------------------------------------------------------------#
 # Distance to calculate G(r)
-r_vec <- seq(0, 15, by = 1) # 15 meters
+r_vec <- seq(0, 10, by = 0.5) # 10 meters
 
-# calculating the G value over a sequence of 30 m, for 200 simulations
+# calculating the G value over a sequence of 10 m, for 200 simulations
 animals_gfunctionout <- envelope(animals_snarl_ppp, fun = Gest, r = r_vec, 
                           nsim = 200) 
 
-plot(gfunction_out)
+animals_gfunctionout
 
 # Creating a data frame and pivoting for ggplot 
-animals_gfunctionout_long <- gfunction_out |>
+animals_gfunctionout_long <- animals_gfunctionout |>
   as.data.frame() |>
   pivot_longer(cols = obs:hi, names_to = "model", values_to = "g_val")
 
 # plotting out g scores and distances 
-animals_gdistance <- ggplot(data = gfunction_out_long, aes(x = r, y = g_val, group = model)) +
+animals_gdistance <- ggplot(data = animals_gfunctionout_long, aes(x = r, y = g_val, group = model)) +
   geom_line(aes(color = model), lwd = 1.3) +
   scale_color_manual(values = c("blueviolet", "chartreuse3", "deeppink", "cornflowerblue"),
                      name = "Model", labels = c("High", "Low", "Observed", "Theoretical")) +
   theme_bw() +
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_line(color = "black")) +
-  labs(x = 'Radius (m)', y = 'G(r)')
+  labs(x = 'Radius (meters)', y = 'G(r)')+
+  theme(
+    axis.title.x = element_text(size = 15),
+    axis.title.y = element_text(size = 15))
 
 animals_gdistance
 
@@ -83,15 +86,17 @@ animals_gdistance
 save(animals_gdistance, file = here("shiny_sierra_biodiversity_or_ts_ct/data/animals_gdistance.rdata" ))
 
 # L function-Animals-------------------------------------------------------------------------------------------#
+# Checking window size 
+st_area(snarl)
 
-# The SNARL boundary is 57.39 acres, which is 232,249 square meters, took the square root of this 
-# for our sequence (check to see if this is correct?)
-r_vec2 <- seq(0, 482, by = 2) 
+# The SNARL boundary is 232250.3 square meters, took the square root of this for our sequence 
+r_vec2 <- seq(0, 482, by = 5) 
 
 animals_lfunctionout <- envelope(animals_snarl_ppp, fun = Lest, r = r_vec2, 
-                          nsim = 10)
+                          nsim = 20)
 
 plot(animals_lfunctionout)
+animals_lfunctionout
 
 # Creating a data frame and pivoting results for plotting
 animals_lfunctionlong <- animals_lfunctionout %>% 
@@ -106,7 +111,10 @@ animals_ldistance <- ggplot(data = animals_lfunctionlong, aes(x = r, y = l)) +
   theme_bw() +
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_line(color = "black")) +
-  labs(x = 'Radius (m)', y = 'L(r)')
+  labs(x = 'Radius (meters)', y = 'L(r)') +
+  theme(
+    axis.title.x = element_text(size = 15),
+    axis.title.y = element_text(size = 15))
 
 animals_ldistance
 
@@ -120,6 +128,7 @@ save(animals_ldistance, file = here("shiny_sierra_biodiversity_or_ts_ct/data/ani
 plants_sf <- st_as_sf(plants_raw, coords = c("decimalLongitude", "decimalLatitude"), crs = 4326)
 
 # Intersection of animal data and snarl boundary 
+# Note: if already projected SNARL to UTM, reproject to WGS84 before running this step
 plants_snarl <- st_intersection(plants_sf, snarl)
 
 # projecting on a 2D plane (UTM zone 11) for point pattern analysis 
@@ -135,12 +144,12 @@ plants_snarl_ppp <- ppp(plants_ppp$x, plants_ppp$y, window = snarl_window)
 
 #G function-Plants---------------------------------------------------------------------------------------------#
 # Distance to calculate G(r)
-r_vec <- seq(0, 30, by = 1) # 15 meters
+r_vec <- seq(0, 9, by = 1) # 15 meters
 
 # calculating the G value over a sequence of 30 m, for 200 simulations
 plants_gfunctionout <- envelope(plants_snarl_ppp, fun = Gest, r = r_vec, 
                           nsim = 200) 
-
+plants_gfunctionout
 plot(plants_gfunctionout)
 
 # creating a data frame and pivoting for ggplot 
@@ -156,7 +165,10 @@ plants_gdistance <- ggplot(data = plants_gfunctionoutlong, aes(x = r, y = g_val,
   theme_bw() +
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_line(color = "black")) +
-  labs(x = 'Radius (m)', y = 'G(r)')
+  labs(x = 'Radius (meters)', y = 'G(r)') +
+  theme(
+    axis.title.x = element_text(size = 15),
+    axis.title.y = element_text(size = 15))
 
 plants_gdistance
 
@@ -169,8 +181,10 @@ save(plants_gdistance, file = here("shiny_sierra_biodiversity_or_ts_ct/data/plan
 r_vec2 <- seq(0, 482, by = 2) 
 
 plants_lfunctionout <- envelope(plants_snarl_ppp, fun = Lest, r = r_vec2, 
-                          nsim = 10)
+                          nsim = 20)
 plot(plants_lfunctionout)
+
+plants_lfunctionout
 
 # Creating a data frame and pivoting to plot our results
 plants_lfunctionlong <- plants_lfunctionout %>% 
@@ -185,10 +199,33 @@ plants_ldistance <- ggplot(data = plants_lfunctionlong, aes(x = r, y = l)) +
   theme_bw() +
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_line(color = "black")) +
-  labs(x = 'Radius (m)', y = 'L(r)')
+  labs(x = 'Radius (meters)', y = 'L(r)') +
+  theme(
+    axis.title.x = element_text(size = 15),
+    axis.title.y = element_text(size = 15))
 
 plants_ldistance
 
 # saving to import with app
 save(plants_ldistance, file = here("shiny_sierra_biodiversity_or_ts_ct/data/plants_ldistance.rdata"))
 
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%#
+# Creating a table for the app
+
+librarian::shelf(knitr, kableExtra, webshot2)
+
+table <- data.frame(
+  Analyses = c("Animals G-function", "Plants G-function", "Animals L-function", "Plants L-function"),
+  Radius = c("10", "15", "482", "482"),
+  Simulations = c("200", "200", "20", "20"),
+  Significance = c("0.00995", "0.00995", "0.0952", "0.0952")
+)
+
+
+ppt_table <- kable(table, caption = "G-function and L-function statistics for animals and plants at SNARL") |>
+  kable_styling(bootstrap_options = c("striped", "hover"))
+
+class(ppt_table) # checking class
+
+# Saving table 
+save_kable(ppt_table, file = here("shiny_sierra_biodiversity_or_ts_ct/data", "ppt_table.jpeg"))
